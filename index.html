@@ -31,27 +31,6 @@
             var renderer = new THREE.WebGLRenderer();
             const controls = new OrbitControls( camera, renderer.domElement );
             var planef;
-            
-            const fileTypes = [
-                "image/apng",
-                "image/bmp",
-                "image/gif",
-                "image/jpeg",
-                "image/pjpeg",
-                "image/png",
-                "image/svg+xml",
-                "image/tiff",
-                "image/webp",
-                "image/x-icon",
-            ];
-
-            function loadTerrain(file, filed) {
-                setupRender(UPNG.decode(file).data, filed);
-            }
-
-            function validFileType(file) {
-                return fileTypes.includes(file.type);
-            }
 
             const scale = (num, in_min, in_max, out_min, out_max) => {
                 return (num - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
