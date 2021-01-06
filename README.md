@@ -5,7 +5,7 @@ A simple HTML5 visualizer for the RichTerrainMapping project. The RichTerrainMap
 This visualizer is only displaying the captured texture (sample sets using google maps data) and the captured depth map. This is not displaying any landmarks or other data, and the sample datasets do not actually represent real correlated data.
 
 # Code
-This program uses bootstrap for the UI, three.js for the rendering, and UPNG.js for decoding the depth map. 
+This program uses bootstrap for the UI, three.js for the rendering, UPNG.js for decoding the depth map, and jszip for decoding the archives. 
 
 # Demo
 To test out this project, check out the [hosted demo](http://rtmviz.astehneylabs.com).
