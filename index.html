@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <title>RTM Project - Visualizer</title>
+
+        <style>
+            body {
+                margin: 0;
+            }
+        </style>
+        
+        <link rel="stylesheet" href="https://unpkg.com/bootstrap-material-design@4.1.1/dist/css/bootstrap-material-design.min.css" integrity="sha384-wXznGJNEXNG1NFsbm0ugrLFMQPWswR3lds2VeinahP8N0zJw9VWSopbjv2x7WCvX" crossorigin="anonymous">
+        <script src="https://unpkg.com/bootstrap-material-design@4.1.1/dist/js/bootstrap-material-design.js" integrity="sha384-CauSuKpEqAFajSpkdjv3z9t8E7RlpJ1UP0lKM/+NdtSarroVKu069AlsRPKkFBz9" crossorigin="anonymous"></script>
+    </head>
+    <body>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+        <script src="https://unpkg.com/popper.js@1.12.6/dist/umd/popper.js" integrity="sha384-fA23ZRQ3G/J53mElWqVJEGJzU0sTs+SvzG8fXVWP+kJQ1lwFAOkcUOysnlKJC33U" crossorigin="anonymous"></script>
+        <script src="js/UPNG.js"></script>
+        <script src="js/jszip.js"></script>
+
+        <script type="module">
+            import * as THREE from './js/three.module.js';
+            import { OrbitControls } from './js/OrbitControls.js';
+
+            var scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+            var renderer = new THREE.WebGLRenderer();
+            const controls = new OrbitControls( camera, renderer.domElement );
+            var planef;
+            
+            const fileTypes = [
+                "image/apng",
+                "image/bmp",
+                "image/gif",
+                "image/jpeg",
+                "image/pjpeg",
+                "image/png",
+                "image/svg+xml",
+                "image/tiff",
+                "image/webp",
+                "image/x-icon",
+            ];
+
+            function loadTerrain(file, filed) {
+                setupRender(UPNG.decode(file).data, filed);
+            }
+
+            function validFileType(file) {
+                return fileTypes.includes(file.type);
+            }
+
+            const scale = (num, in_min, in_max, out_min, out_max) => {
+                return (num - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+            }
+
+            function setupRender(upngf, filed){
+                // Renderer Code
+                const texture = new THREE.TextureLoader().load(filed);
+                texture.wrapS = THREE.RepeatWrapping;
+                texture.wrapT = THREE.RepeatWrapping;
+                texture.repeat.set( 1, 1 );
+
+                var materials = [new THREE.MeshBasicMaterial({map: texture, side: THREE.FrontSide}),
+                                new THREE.MeshBasicMaterial({map: texture, side: THREE.BackSide})];
+
+                var geometry = new THREE.PlaneGeometry(3, 3, 198, 198);
+                
+                console.log(upngf);
+                for (var i = 0, l = geometry.vertices.length; i < l; i++) {
+                    geometry.vertices[i].z = scale(upngf[i], 0, 256, 0, 1);
+                }
+
+                for (var i=0, len=geometry.faces.length; i<len; i++) {
+                    var face = geometry.faces[i].clone();
+                    face.materialIndex = 1;
+                    geometry.faces.push(face);
+                    geometry.faceVertexUvs[0].push(geometry.faceVertexUvs[0][i].slice(0));
+                }
+
+                planef = new THREE.Mesh(geometry, materials);
+
+                planef.position.x = 0;
+                planef.position.y = 0;
+                planef.position.z = 0;
+                planef.rotation.x = 90;
+                planef.rotation.y = 0;
+                    
+                scene.add(planef);
+            }
+
+            function initScene() {
+                // Prepare window
+                renderer.setSize( window.innerWidth, window.innerHeight );
+                scene.background = new THREE.Color( 0x000000 );
+                renderer.domElement.style.display = "none";
+                document.body.appendChild( renderer.domElement );
+
+                camera.position.z = 5;
+                window.addEventListener( 'resize', onWindowResize, false );
+
+                const ambientLight = new THREE.AmbientLight( 0x222222 );
+				scene.add( ambientLight );
+
+                controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+				controls.dampingFactor = 0.05;
+                controls.screenSpacePanning = false;
+                controls.minDistance = 1;
+                controls.maxDistance = 3;
+                controls.maxPolarAngle = Math.PI / 2;
+                
+                scene = new THREE.Scene();
+            }
+
+            function animate() {
+                requestAnimationFrame( animate );
+                //planef.rotation.z += 0.003;
+                controls.update();
+                renderer.render( scene, camera );
+            }
+
+            function onWindowResize() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize( window.innerWidth, window.innerHeight );
+            }
+
+            function unfade(element) {
+                var op = 0.1;  // initial opacity
+                element.style.display = 'block';
+                var timer = setInterval(function () {
+                    if (op >= 1){
+                        clearInterval(timer);
+                    }
+                    element.style.opacity = op;
+                    element.style.filter = 'alpha(opacity=' + op * 100 + ")";
+                    op += op * 0.1;
+                }, 10);
+            }
+
+            $("#mpfile").on("change", function(evt) {
+                JSZip.loadAsync(evt.target.files[0])                                   // 1) read the Blob
+                .then(function(zip) {
+                    document.getElementById("cttext").style.display = "none";
+
+                    zip.file("depth.png").async("uint8array").then(function (u8) {
+                        zip.file("texture.png").async("base64").then(function (basetexture) {
+                            setupRender(UPNG.decode(u8).data, "data:text/plain;base64,"+basetexture);
+                                
+                            unfade(document.querySelector("canvas"));
+                            animate();
+                        });
+                    });
+                }, function (e) {
+                    document.getElementById("cttext").innerHTML = e.message;
+                    document.getElementById("cttext").style.display = "block";
+                });
+            });
+
+            // Tasks
+            initScene();
+        </script>
+
+        <div class="card" id="mcard" style="width: 18rem; position: absolute; top: 30px; left: 30px; border-radius: 10px;">
+            <img class="card-img-top" src="https://www.volantexrc.eu/images/VolantexRC/759-1/mini/200px_759-1%20ASW28%2005.jpg" style="padding: 10px;" alt="Card image cap">
+            <div class="card-body">
+              <h5 class="card-title">RTM Visualizer</h5>
+              <p class="card-text">Select an RTM data archive below to view.</p>
+            </div>
+            <div class="card-body">
+                <input type="button" id="loadFileTX" value="Select Archive File" class="btn btn-outline-info" onclick="document.getElementById('mpfile').click();" />
+                <input type="file" style="display:none;" id="mpfile"></input>
+            </div>
+        </div>
+
+        <div class="alert alert-danger" id="modalert" role="alert" style="position: absolute; bottom: 30px; left: 30px; display: none; border-radius: 10px;">
+            <h4 class="alert-heading" >Please check your upload!</h4>
+            <p id="cttext"></p>
+            <hr>
+            <p class="mb-0">Please try again, or use another file.</p>
+        </div>
+
+    </body>
+</html>
