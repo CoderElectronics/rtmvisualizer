@@ -10,4 +10,4 @@ This program uses bootstrap for the UI, three.js for the rendering, UPNG.js for 
 # Demo
 To test out this project, check out the [hosted demo](http://rtmviz.astehneylabs.com).
 \
-There are two included demo archives, [a Depth Map demo](http://rtmviz.astehneylabs.com/demos/Depth_Map_Demo.zip), and [a normal data archive](http://rtmviz.astehneylabs.com/demos/Depth_Map_Demo.zip).
+There are two included demo archives, [a Depth Map demo](http://rtmviz.astehneylabs.com/demos/Depth_Map_Demo.zip), and [a normal data archive](http://rtmviz.astehneylabs.com/demos/Topographic_Demo.zip).
